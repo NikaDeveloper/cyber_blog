@@ -1,9 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from blog.validators import validate_email_domain, validate_forbidden_words, validate_author_age
+
 
 class User(AbstractUser):
-    # AbstractUser уже содержит username (логин), password и email
+    email = models.EmailField(unique=True, validators=[validate_email_domain], verbose_name="Email")
     phone = models.CharField(max_length=15, verbose_name="Номер телефона")
     birth_date = models.DateField(null=True, blank=True, verbose_name="Дата рождения")
 
@@ -16,7 +18,7 @@ class User(AbstractUser):
 
 
 class Post(models.Model):
-    title = models.CharField(max_length=200, verbose_name="Заголовок")
+    title = models.CharField(max_length=200, verbose_name="Заголовок", validators=[validate_forbidden_words])
     content = models.TextField(verbose_name="Текст")
     # null=True, blank=True — потому что картинка может отсутствовать
     image = models.ImageField(upload_to='posts/', null=True, blank=True, verbose_name="Изображение")
@@ -24,6 +26,11 @@ class Post(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        super().clean()
+        if self.author:
+            validate_author_age(self.author)
 
     class Meta:
         verbose_name = "Пост"

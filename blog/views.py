@@ -5,6 +5,7 @@ from .permissions import IsOwnerOrAdmin
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """ ViewSet for viewing and editing users """
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -23,6 +24,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class PostViewSet(viewsets.ModelViewSet):
+    """ ViewSet for viewing and editing posts """
+
     queryset = Post.objects.all()
     serializer_class = PostSerializer
 
@@ -37,15 +40,18 @@ class PostViewSet(viewsets.ModelViewSet):
         return [IsOwnerOrAdmin()]
 
     def perform_create(self, serializer):
+        """ Create a new post """
         # автоматически автор поста текущий юзер
         serializer.save(author=self.request.user)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """ ViewSet for viewing and editing comments """
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
     def get_permissions(self):
+        """ Allow users to edit their own comments """
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
         if self.action == 'create':
@@ -53,5 +59,6 @@ class CommentViewSet(viewsets.ModelViewSet):
         return [IsOwnerOrAdmin()]
 
     def perform_create(self, serializer):
+        """ Create a new post """
         # текущий юзер автор коммента
         serializer.save(author=self.request.user)

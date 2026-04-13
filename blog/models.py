@@ -32,6 +32,9 @@ class Post(models.Model):
         if self.author:
             validate_author_age(self.author)
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         verbose_name = "Пост"
         verbose_name_plural = "Посты"
@@ -44,6 +47,9 @@ class Comment(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Comment by {self.author} on {self.post}"
 
     class Meta:
         verbose_name = "Комментарий"

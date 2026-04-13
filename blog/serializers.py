@@ -1,22 +1,37 @@
 from rest_framework import serializers
 from .models import User, Post, Comment
+from datetime import date
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """ Сериализатор для модели пользователя.
+    Обрабатывает регистрацию и просмотр профиля"""
     # пароль можно только отправить при регистрации, но нельзя прочитать
     password = serializers.CharField(write_only=True)
+
+    @staticmethod
+    def validate_birth_date(value):
+        """ Проверка, что пользователю есть 18 лет."""
+        if value:
+            today = date.today()
+            age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+            if age < 18:
+                raise serializers.ValidationError("Регистрация разрешена только с 18 лет")
+        return value
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password', 'phone', 'birth_date']
 
     def create(self, validated_data):
-        # хеширование пароля перед сохранением
+        """ Создание пользователя с хешированием пароля """
         user = User.objects.create_user(**validated_data)
         return user
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """ Сериализатор для комментариев """
+    # поле 'author' доступно только для чтения и возвращает username
     author = serializers.ReadOnlyField(source='author.username')
 
     class Meta:
@@ -25,6 +40,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
+    """ Сериализатор для постов """
     # имя автора вместо id
     author = serializers.ReadOnlyField(source='author.username')
     # вывод комментов сразу в посте

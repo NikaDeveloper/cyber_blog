@@ -5,31 +5,27 @@ from .permissions import IsOwnerOrAdmin
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """ ViewSet for viewing and editing users """
+    """ ViewSet для управления профилями пользователей """
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def get_permissions(self):
         if self.action == 'create':
-            # регистрация доступна всем
             return [permissions.AllowAny()]
-        if self.action in ['update', 'partial_update']:
-            # редактировать может только сам себя или админ
-            return [IsOwnerOrAdmin()]
         if self.action == 'destroy':
-            # удалять может только админ
             return [permissions.IsAdminUser()]
-        # читать могут только авторизованные или админы
-        return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    """ ViewSet for viewing and editing posts """
+    """ ViewSet для работы с постами.
+    Поддерживает создание, чтение, обновление и удаление. """
 
-    queryset = Post.objects.all()
+    queryset = Post.objects.all().prefetch_related('comments', 'author')
     serializer_class = PostSerializer
 
     def get_permissions(self):
+        """ Определяет права доступа в зависимости от действия. """
         if self.action in ['list', 'retrieve']:
             # читать могут все
             return [permissions.AllowAny()]
@@ -40,18 +36,17 @@ class PostViewSet(viewsets.ModelViewSet):
         return [IsOwnerOrAdmin()]
 
     def perform_create(self, serializer):
-        """ Create a new post """
-        # автоматически автор поста текущий юзер
+        """ Сохраняет пост, устанавливая текущего пользователя автором. """
         serializer.save(author=self.request.user)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """ ViewSet for viewing and editing comments """
+    """ ViewSet для работы с комментариями """
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
     def get_permissions(self):
-        """ Allow users to edit their own comments """
+        """ Разрешает юзерам редактировать их комменты """
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
         if self.action == 'create':
@@ -59,6 +54,5 @@ class CommentViewSet(viewsets.ModelViewSet):
         return [IsOwnerOrAdmin()]
 
     def perform_create(self, serializer):
-        """ Create a new post """
-        # текущий юзер автор коммента
+        """ Сохраняет комментарий, устанавливая текущего пользователя автором """
         serializer.save(author=self.request.user)

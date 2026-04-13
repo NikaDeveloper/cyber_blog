@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'drf_spectacular',
     'blog',
     'rest_framework',
 ]
@@ -84,11 +85,13 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
     {
-        'NAME': 'blog.validators.validate_password_digits',
+        'NAME': 'blog.validators.DigitValidator',
     },
 ]
 
-
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
 
 
 LANGUAGE_CODE = 'en-us'
